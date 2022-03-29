@@ -1,0 +1,226 @@
+% MATLAB script for Assessment Item-1
+% Task-3
+
+%Figure = what does this actually do?
+
+%{
+%mean filter has been applied
+filter = fspecial('average',[3 3]);
+blurred = imfilter(I, filter);
+%}
+
+clear; close all; clc;
+I = imread('Starfish.jpg');
+I = rgb2gray(I);
+
+I = medfilt2(I, [3 3]);
+imshow(I)
+
+%Samp = impixel(I);
+[M, N] = size(I);
+Star1 = zeros(M,N);
+index1 = find(I > 0 & I < 200);
+Star1(index1) = 1;
+imshow(Star1)
+out1 = bwmorph(Star1, 'erode',50);
+imshow(out1)
+
+[m, n] = size(Star1);
+Star2 = zeros(m, n);
+index2 = find(I > 200 & I < 215);
+Star2(index2) = 1;
+
+Star3 = bwmorph(Star2, 'dilate',0.5);
+Star4 = imfill(Star3, 'holes');
+imshow(Star4)
+%{
+
+
+%}
+
+%{
+%rows, columns and planes
+[M, N, P] = size(I);
+%All the rows and all the columns in the Red Plane.
+R = I(:,:,1);
+%All the rows and all the columns in the Green Plane.
+G = I(:,:,2);
+%All the rows and all the columns in the Blue Plane.
+B = I(:,:,3);
+
+R = medfilt2(R,[7 7]);
+G = medfilt2(G,[7 7]);
+B = medfilt2(B,[7 7]);
+
+MedImg(:,:,1) = R;
+MedImg(:,:,2) = G;
+MedImg(:,:,3) = B;
+
+imshow(MedImg)
+%}
+
+%{
+%S = impixel(MedImg);
+
+%set all rows and columns to 0 (zero)
+starZ = zeros(M,N);
+%take sample colours from the stars and index as 1 (one).
+idx = find(R > 220 & R < 255 & G > 100 & G < 220 & B > 150 & B < 180);
+starZ(idx) = 1;
+%}
+
+%{
+imshow(starZ);
+out = bwmorph(starZ, 'dilate',3);
+imshow(out)
+out2 = imfill(out, 'holes');
+imshow(out2)
+out3 = bwmorph(out2, 'erode');
+imshow(out3)
+out4 = bwmorph(out3, 'dilate', 1);
+imshow(out4)
+%}
+
+%{
+K = imfill(starZ,'holes');
+
+stats = regionprops(logical(K), 'Area', 'Solidity');
+idx  = ([stats.Area] > 250 & [stats.Solidity] > 0.1);
+L = bwlabel(K);
+result = ismember(L,find(idx));
+%}
+
+%{
+R = medfilt2(R,[7 7]);
+G = medfilt2(G,[7 7]);
+B = medfilt2(B,[7 7]);
+
+MedImg(:,:,1) = R;
+MedImg(:,:,2) = G;
+MedImg(:,:,3) = B;
+
+
+imshow(MedImg);
+%}
+
+%mask = roipoly(MedImg); 
+%sample = impixel(MedImage);
+
+
+
+%{
+%https://uk.mathworks.com/help/images/ref/immultiply.html
+r = immultiply(mask, MedImg(:,:,1));
+g = immultiply(mask, MedImg(:,:,2));
+b = immultiply(mask, MedImg(:,:,3));
+
+CatImg = cat(3, r, g, b);
+
+%Find the coordinates in the point of ROI.
+[M, N, K] = size(CatImg);
+
+%RESHAPE???
+i = reshape(CatImg, M*N, 3);
+%find = finds the non-zero values in the mask
+idx = find(mask);
+i = double(i(idx, 1:3));
+
+% BELOW is stats
+[C, m] = cov(i); 
+%^^get mean later?
+d = diag(C);
+sd = sqrt(d);
+
+
+
+%AND together the logical arrays to find pixels with the appropriate value
+%SegCol = R > 254 & G > 221 & G < 186 & B < 255;
+%}
+
+
+%{
+%extracted RGB channels
+R = I(:,:,1);
+G = I(:,:,2);
+B = I(:,:,3);
+
+%Perform median filtering on the R,G and B channels
+%B = medfilt2(A,[m n])
+%Create a 3*3 filter mask (2*2 is too little)
+%Apply the filter mask to each channel
+R = medfilt2(R,[3 3]);
+G = medfilt2(G,[3 3]);
+B = medfilt2(B,[3 3]);
+
+%copy the each filtered channel into a FilteredImage
+MedImage(:,:,1) = R;
+MedImage(:,:,2) = G;
+MedImage(:,:,3) = B;
+
+%subplot(1,3,3);
+%imshow(MedImage);
+
+%define R,G and B componenets of required colour
+r = 210;
+g = 175;
+b = 125;
+
+%extract R, G and B channels
+cR = MedImage(:,:,1);
+cG = MedImage(:,:,2);
+cB = MedImage(:,:,3);
+
+%calculate the gray
+cGy = rgb2gray(MedImage);
+
+%calculate the differences for each channel
+dR = cR - r;
+dG = cG - g;
+dB = cB - b;
+
+%calculate the differences for each channel from the RGB colour
+d = dR .^2 + dG .^2 + dB .^2;
+
+%create a mask by thresholding the differences
+mask = d < 2000;
+
+%copy the gray values where the mask is true
+cR(mask) = cGy(mask);
+cG(mask) = cGy(mask);
+cB(mask) = cGy(mask);
+
+%copy channels into the RGB image
+Image(:,:,1) = cR;
+Image(:,:,2) = cG;
+Image(:,:,3) = cB;
+
+imshow(Image)
+%}
+
+
+%{
+%sample = impixel(FilteredImage);
+out = R > 243 & G > 182 & G < 213 & B < 243;
+imshow(out);
+
+%some interesting but useless functionality.
+out2 = imfill(out, 'holes');
+imshow(out2)
+%out3 = bwmorph(out2, 'erode');
+%imshow(out3)
+out3 = bwmorph(out2, 'dilate',3);
+imshow(out3)
+out4 = imfill(out3,'holes');
+imshow(out4)
+out5 = bwmorph(out4,'erode');
+imshow(out5)
+
+
+
+%Illumination problem.
+level = 0.95;
+Ithresh = im2bw(Igray,level);
+imshow(Ithresh);
+%}
+
+
